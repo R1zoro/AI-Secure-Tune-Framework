@@ -2,9 +2,6 @@
 
 **Secure Tune** is an automated framework designed to audit the security and safety of fine-tuned Large Language Models (LLMs) before they are deployed. It acts as a crucial Quality Assurance (QA) step, systematically testing a model for vulnerabilities like toxicity, data leakage, and susceptibility to adversarial attacks. The final output is a clear, human-readable audit report that gives a "Pass/Fail" verdict and details any detected issues.
 
-![Secure Tune Report Screenshot](placeholder.png)
-*(Note: A placeholder for a screenshot of the final report.)*
-
 ---
 
 ## 🏛️ How It Works: Architecture Overview
