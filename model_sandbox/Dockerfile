@@ -5,7 +5,6 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the requirements file into the container first
-# This is a best practice for Docker layer caching
 COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
@@ -15,12 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 
 # Define an environment variable for the model path inside the container.
-# This makes our container more flexible.
-ENV MODEL_PATH=/app/models/distilgpt2
-
+ENV MODEL_PATH=/app/models/gpt2-medium
 # Make port 5000 available to the host machine
 EXPOSE 5000
-
 # The command to run when the container starts.
-# We use gunicorn for a more robust web server than Flask's default.
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--timeout", "120", "app:app"]
