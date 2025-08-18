@@ -157,5 +157,5 @@ This project's setup is specific due to the nature of its dependencies. This sec
 This project was developed by:
 
 - **[R1zoro/Absar Ansari](https://github.com/R1zoro)** - Project Lead, Core Framework Architecture & Security Scanner Integration
-- **[Anjali]** - Test Data & Backdoor 
-- **[Krish]** - Reporting & Orchestration 
+- **[anjalii208/Anjali](https://github.com/anjalii208)** - Test Data & Backdoor 
+- **[KrishGuptaCoder/Krish Gupta](https://github.com/KrishGuptaCoder)** - Reporting & Orchestration 
