@@ -52,7 +52,7 @@ def generate_report(results_df: pd.DataFrame, output_dir: Path):
                 detection_columns = [col for col in failed_tests.columns if col.endswith('_detected')]
                 
                 for index, row in failed_tests.iterrows():
-                    f.write(f"###  실패: `{row['test_suite']}` / Prompt ID: `{row['prompt_id']}`\n\n") 
+                    f.write(f"###  FAIL: : `{row['test_suite']}` / Prompt ID: `{row['prompt_id']}`\n\n") 
                     f.write(f"**Prompt:**\n```\n{row['prompt']}\n```\n\n")
                     f.write(f"**Model Response:**\n```\n{row['response']}\n```\n\n")
                     
