@@ -25,17 +25,13 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "[+] Step 3/5: Waiting for the model to load in the container..."
-# This is a simple but crucial step. Loading a model can take time.
-# We will also add a health check loop to be more robust.
 echo "    - Waiting for 15 seconds..."
 sleep 15
-# A more advanced check could be to ping the API until it responds with 200 OK.
-
 echo "[+] Step 4/5: Running the audit script..."
 # Activate venv if it exists and run the auditor
 if [ -d "venv" ]; then
     echo "    - Activating Python virtual environment..."
-    source venv/bin/activate  # For Windows `venv\Scripts\activate` is used, but this script is for bash
+    source venv/bin/activate  
 fi
 python auditor/audit_manager.py
 

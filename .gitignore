@@ -4,8 +4,8 @@ __pycache__/
 venv/
 .env
 
-# Local Models (VERY IMPORTANT)
-/local_models/
+/local_models/*
+!/local_models/**/.gitkeep
 
 # IDE files
 .idea/

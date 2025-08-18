@@ -1,70 +1,74 @@
 # auditor/report_generator.py
-
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
+import logging
 
-"""
-This module handles the generation of the final audit report.
-
-This is the primary file for Person 3 (Orchestration & Reporting Lead) to develop.
-"""
+logger = logging.getLogger(__name__)
 
 def generate_report(results_df: pd.DataFrame, output_dir: Path):
-    """
-    Generates a summary report from the audit results DataFrame.
+    """Generates the final, polished audit report for the demo."""
+    logger.info("Generating final polished audit report...")
     
-    Args:
-        results_df (pd.DataFrame): DataFrame containing the detailed audit results.
-        output_dir (Path): A pathlib.Path object for the directory to save reports in.
-    """
-    print("\n[+] Generating audit report...")
-    
-    # --- Create a summary ---
+    #  Overall Summary 
     total_prompts = len(results_df)
-    pii_failures = results_df['pii_detected'].sum()
-    secrets_failures = results_df['secrets_detected'].sum()
-    jailbreak_failures = results_df['jailbreak_detected'].sum()
-    
-    total_failures = int(pii_failures + secrets_failures + jailbreak_failures)
+    total_failures = int(results_df['final_result'].value_counts().get('FAIL', 0))
     overall_status = "FAIL" if total_failures > 0 else "PASS"
 
-    # --- Generate a timestamp for the report files ---
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    
-    # Use the Path object to construct the base path for the report files
     report_basename = output_dir / f"audit_report_{timestamp}"
-
-    # --- Write Markdown Report (for Person 3 to improve) ---
     md_report_path = f"{str(report_basename)}.md"
+
+    #  Create summary table 
+    summary_data = []
+    test_suites = results_df['test_suite'].unique()
+    for suite in test_suites:
+        suite_df = results_df[results_df['test_suite'] == suite]
+        suite_total = len(suite_df)
+        suite_failures = int(suite_df['final_result'].value_counts().get('FAIL', 0))
+        pass_rate = f"{((suite_total - suite_failures) / suite_total) * 100:.1f}%" if suite_total > 0 else "N/A"
+        status_emoji = "✅" if suite_failures == 0 else "❌"
+        summary_data.append([suite, status_emoji, suite_total, suite_failures, pass_rate])
+    
+    summary_df = pd.DataFrame(summary_data, columns=["Test Suite", "Status", "Prompts", "Failures", "Pass Rate"])
+
     try:
         with open(md_report_path, "w") as f:
             f.write("# Secure Tune Audit Report\n\n")
-            f.write(f"**Date & Time:** {timestamp}\n")
-            f.write(f"**Overall Status:** <font color='{ 'red' if overall_status == 'FAIL' else 'green' }'>{overall_status}</font>\n\n")
-            f.write("## Summary\n")
-            f.write(f"- **Total Prompts Tested:** {total_prompts}\n")
-            f.write(f"- **Total Failures:** {total_failures}\n")
-            f.write(f"  - PII Detections: {int(pii_failures)}\n")
-            f.write(f"  - Secrets Detections: {int(secrets_failures)}\n")
-            f.write(f"  - Jailbreak Detections: {int(jailbreak_failures)}\n\n")
-            f.write("## Detailed Failures\n\n")
+            f.write(f"Date & Time:** {timestamp}\n")
+            f.write(f"Overall Status:** **<font color='{ 'red' if overall_status == 'FAIL' else 'green' }'>{overall_status}</font>**\n\n")
             
+            f.write("## Executive Summary\n\n")
+            f.write("This report details the results of an automated security audit against the target language model. The model was tested against several suites of prompts designed to detect policy violations, adversarial attacks, and other vulnerabilities.\n\n")
+            f.write(summary_df.to_markdown(index=False))
+            f.write("\n\n---\n\n")
+            
+            f.write("detailed Failure Analysis\n\n")
             failed_tests = results_df[results_df['final_result'] == 'FAIL']
             if failed_tests.empty:
-                f.write("No failures detected.\n")
+                f.write(" **Excellent!** All tests passed across all suites. No failures were detected.\n")
             else:
-                # Only show failed tests in the summary MD file
-                f.write(failed_tests.to_markdown(index=False))
-
-        print(f"[SUCCESS] Markdown report saved to {md_report_path}")
+                f.write("The following prompts resulted in a `FAIL` verdict. Each entry details the prompt, the model's problematic response, and the specific security scanners that were triggered.\n\n")
+                detection_columns = [col for col in failed_tests.columns if col.endswith('_detected')]
+                
+                for index, row in failed_tests.iterrows():
+                    f.write(f"###  실패: `{row['test_suite']}` / Prompt ID: `{row['prompt_id']}`\n\n") 
+                    f.write(f"**Prompt:**\n```\n{row['prompt']}\n```\n\n")
+                    f.write(f"**Model Response:**\n```\n{row['response']}\n```\n\n")
+                    
+                    # ttO Find which specific scanners were triggered for this failure
+                    triggered_scanners = [col.replace('_detected', '').title() for col in detection_columns if row[col] == True]
+                    f.write(f"** Triggered Scanners:** `{', '.join(triggered_scanners)}`\n\n")
+                    f.write("---\n")
+            
+        logger.info(f"Markdown report saved to {md_report_path}")
     except Exception as e:
-        print(f"[ERROR] Failed to write Markdown report: {e}")
+        logger.error(f"Failed to write Markdown report: {e}", exc_info=True)
 
-    # --- Save full results to CSV for detailed analysis ---
+    # Save full results to CSV (unchanged) 
     csv_report_path = f"{str(report_basename)}_full_details.csv"
     try:
         results_df.to_csv(csv_report_path, index=False)
-        print(f"[SUCCESS] Full CSV report saved to {csv_report_path}")
+        logger.info(f"Full CSV report saved to {csv_report_path}")
     except Exception as e:
-        print(f"[ERROR] Failed to write CSV report: {e}")
+        logger.error(f"Failed to write CSV report: {e}")
